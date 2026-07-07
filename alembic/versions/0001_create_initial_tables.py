@@ -112,7 +112,6 @@ def upgrade() -> None:
         sa.Column("booking_id", sa.Integer(), sa.ForeignKey("booking.booking_id"), nullable=False),
         sa.Column("amount", sa.Numeric(10, 2), nullable=False),
         sa.Column("method", sa.String(length=30), nullable=False),
-        sa.Column("status", sa.String(length=30), nullable=False),
         sa.Column("payment_date", sa.Date(), nullable=False),
     )
 

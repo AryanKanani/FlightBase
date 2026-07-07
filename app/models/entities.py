@@ -197,7 +197,6 @@ class Payment(Base):
     booking_id: Mapped[int] = mapped_column(ForeignKey("booking.booking_id"), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     method: Mapped[str] = mapped_column(String(30), nullable=False)
-    status: Mapped[str] = mapped_column(String(30), nullable=False)
     payment_date: Mapped[date] = mapped_column(Date, nullable=False)
 
     booking: Mapped["Booking"] = relationship("Booking", back_populates="payments")
