@@ -1,1 +1,33 @@
+from app.models.entities import (
+    Aircraft,
+    Airline,
+    Airport,
+    Booking,
+    Crew,
+    Fare,
+    Flight,
+    Passenger,
+    Payment,
+    Schedule,
+    ScheduleCrew,
+    Seat,
+    SeatClass,
+    Ticket,
+)
 
+__all__ = [
+    "Aircraft",
+    "Airline",
+    "Airport",
+    "Booking",
+    "Crew",
+    "Fare",
+    "Flight",
+    "Passenger",
+    "Payment",
+    "Schedule",
+    "ScheduleCrew",
+    "Seat",
+    "SeatClass",
+    "Ticket",
+]
