@@ -6,6 +6,10 @@ from pydantic import BaseModel
 class ScheduleRead(BaseModel):
     schedule_id: int
     flight_number: str
+    source: str
+    source_city: str
+    destination: str
+    destination_city: str
     aircraft_model: str
     departure_time: datetime
     arrival_time: datetime

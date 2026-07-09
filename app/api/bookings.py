@@ -88,7 +88,7 @@ def list_bookings(db: Session = Depends(get_db)) -> list[BookingRead]:
     ]
 
 
-@router.get("/flight/{flight_id}", response_model=list[BookingDetailRead])
+@router.get("/flight/{flight_id}", response_model=list[BookingDetailRead], include_in_schema=False)
 def list_bookings_for_flight(
     flight_id: int,
     db: Session = Depends(get_db),
