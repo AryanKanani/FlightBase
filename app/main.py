@@ -6,6 +6,7 @@ from app.api.fares import router as fares_router
 from app.api.flights import router as flights_router
 from app.api.passengers import router as passengers_router
 from app.api.payments import router as payments_router
+from app.api.reservations import router as reservations_router
 from app.api.schedules import router as schedules_router
 from app.api.tickets import router as tickets_router
 
@@ -18,6 +19,7 @@ app.include_router(fares_router)
 app.include_router(flights_router)
 app.include_router(passengers_router)
 app.include_router(payments_router)
+app.include_router(reservations_router)
 app.include_router(schedules_router)
 app.include_router(tickets_router)
 
