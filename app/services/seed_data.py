@@ -32,6 +32,8 @@ random.seed(42)
 
 def seed_database(db: Session) -> None:
     if db.query(Airline).first():
+        _ensure_demo_routes_and_schedules(db)
+        db.commit()
         return
 
     airlines = _create_airlines(db)
@@ -46,6 +48,7 @@ def seed_database(db: Session) -> None:
     _assign_crew_to_schedules(db, schedules, crew_members)
     passengers = _create_passengers(db)
     _create_bookings_tickets_and_payments(db, passengers, schedules, seats, fares)
+    _ensure_demo_routes_and_schedules(db)
     db.commit()
 
 
@@ -311,5 +314,102 @@ def _create_bookings_tickets_and_payments(
             payment_date=date.today(),
         )
         db.add(payment)
+
+    db.flush()
+
+
+def _ensure_demo_routes_and_schedules(db: Session) -> None:
+    target_schedule_count = 60
+    if db.query(Schedule).count() >= target_schedule_count:
+        return
+
+    airlines = db.query(Airline).order_by(Airline.airline_id).all()
+    airports = db.query(Airport).order_by(Airport.airport_id).all()
+    aircraft_list = db.query(Aircraft).order_by(Aircraft.aircraft_id).all()
+    seat_classes = db.query(SeatClass).order_by(SeatClass.class_id).all()
+
+    if not airlines or len(airports) < 2 or not aircraft_list or not seat_classes:
+        return
+
+    class_prices = {
+        "Economy": Decimal("4500.00"),
+        "Business": Decimal("9000.00"),
+        "First": Decimal("15000.00"),
+    }
+    base_departure = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
+    route_number = 600
+
+    for origin in airports:
+        for destination in airports:
+            if origin.airport_id == destination.airport_id:
+                continue
+
+            flight_number = f"FB{route_number}"
+            route_number += 1
+
+            flight = (
+                db.query(Flight)
+                .filter(Flight.flight_number == flight_number)
+                .first()
+            )
+            if flight is None:
+                airline = airlines[(route_number - 601) % len(airlines)]
+                flight = Flight(
+                    airline_id=airline.airline_id,
+                    flight_number=flight_number,
+                    origin_airport_id=origin.airport_id,
+                    destination_airport_id=destination.airport_id,
+                )
+                db.add(flight)
+                db.flush()
+
+            for seat_class in seat_classes:
+                existing_fare = (
+                    db.query(Fare)
+                    .filter(
+                        Fare.flight_id == flight.flight_id,
+                        Fare.class_id == seat_class.class_id,
+                    )
+                    .first()
+                )
+                if existing_fare is None:
+                    base_price = class_prices.get(seat_class.class_name, Decimal("5000.00"))
+                    db.add(
+                        Fare(
+                            flight_id=flight.flight_id,
+                            class_id=seat_class.class_id,
+                            price=base_price + Decimal(random.randint(0, 2500)),
+                        )
+                    )
+
+            for day_offset in range(7):
+                if db.query(Schedule).count() >= target_schedule_count:
+                    break
+
+                aircraft = aircraft_list[(flight.flight_id + day_offset) % len(aircraft_list)]
+                departure_time = base_departure + timedelta(days=day_offset, hours=day_offset % 6)
+                existing_schedule = (
+                    db.query(Schedule)
+                    .filter(
+                        Schedule.flight_id == flight.flight_id,
+                        Schedule.departure_time == departure_time,
+                    )
+                    .first()
+                )
+                if existing_schedule is None:
+                    db.add(
+                        Schedule(
+                            flight_id=flight.flight_id,
+                            aircraft_id=aircraft.aircraft_id,
+                            departure_time=departure_time,
+                            arrival_time=departure_time + timedelta(hours=2),
+                            status="Scheduled",
+                        )
+                    )
+
+            if db.query(Schedule).count() >= target_schedule_count:
+                break
+        if db.query(Schedule).count() >= target_schedule_count:
+            break
 
     db.flush()

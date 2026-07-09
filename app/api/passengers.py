@@ -68,7 +68,7 @@ def list_passenger_bookings(
     ]
 
 
-@router.post("/", response_model=PassengerRead, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=PassengerRead, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_passenger(payload: PassengerCreate, db: Session = Depends(get_db)) -> Passenger:
     existing_email = db.query(Passenger).filter(Passenger.email == payload.email).first()
     if existing_email:

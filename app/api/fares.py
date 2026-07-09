@@ -32,7 +32,7 @@ def list_fares(db: Session = Depends(get_db)) -> list[FareRead]:
     ]
 
 
-@router.get("/{fare_id}", response_model=FareRead)
+@router.get("/{fare_id}", response_model=FareRead, include_in_schema=False)
 def get_fare(fare_id: int, db: Session = Depends(get_db)) -> FareRead:
     fare = (
         db.query(Fare)

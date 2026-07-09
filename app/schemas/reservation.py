@@ -14,6 +14,18 @@ class ReservationCreate(BaseModel):
     layover_minutes: int = 0
 
 
+class SimpleReservationCreate(BaseModel):
+    passenger_name: str
+    email: str
+    phone: str
+    passport_no: str
+    source: str
+    destination: str
+    travel_date: date
+    seat_class: str
+    payment_method: str
+
+
 class ReservationRead(BaseModel):
     booking_id: int
     ticket_id: int

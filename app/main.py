@@ -18,10 +18,10 @@ app.include_router(bookings_router)
 app.include_router(fares_router)
 app.include_router(flights_router)
 app.include_router(passengers_router)
-app.include_router(payments_router)
-app.include_router(reservations_router)
+app.include_router(payments_router, include_in_schema=False)
+app.include_router(reservations_router, include_in_schema=False)
 app.include_router(schedules_router)
-app.include_router(tickets_router)
+app.include_router(tickets_router, include_in_schema=False)
 
 
 @app.get("/health")
