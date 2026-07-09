@@ -12,6 +12,51 @@ from app.schemas.reservation import ReservationCreate, ReservationRead
 router = APIRouter(prefix="/reservations", tags=["Reservations"])
 
 
+@router.get("/", response_model=list[ReservationRead])
+def list_reservations(db: Session = Depends(get_db)) -> list[ReservationRead]:
+    tickets = (
+        db.query(Ticket)
+        .options(
+            joinedload(Ticket.booking).joinedload(Booking.passenger),
+            joinedload(Ticket.booking).joinedload(Booking.payments),
+            joinedload(Ticket.schedule).joinedload(Schedule.flight),
+            joinedload(Ticket.seat),
+            joinedload(Ticket.fare).joinedload(Fare.seat_class),
+        )
+        .order_by(Ticket.ticket_id)
+        .all()
+    )
+
+    reservations = []
+    for ticket in tickets:
+        payment = ticket.booking.payments[0] if ticket.booking.payments else None
+        if payment is None:
+            continue
+
+        reservations.append(
+            ReservationRead(
+                booking_id=ticket.booking_id,
+                ticket_id=ticket.ticket_id,
+                payment_id=payment.payment_id,
+                passenger_id=ticket.booking.passenger_id,
+                passenger_name=ticket.booking.passenger.name,
+                schedule_id=ticket.schedule_id,
+                flight_number=ticket.schedule.flight.flight_number,
+                seat_id=ticket.seat_id,
+                seat_number=ticket.seat.seat_number,
+                fare_id=ticket.fare_id,
+                seat_class=ticket.fare.seat_class.class_name,
+                total_price=ticket.booking.total_price,
+                payment_method=payment.method,
+                booking_date=ticket.booking.booking_date,
+                issue_date=ticket.issue_date,
+                payment_date=payment.payment_date,
+            )
+        )
+
+    return reservations
+
+
 @router.post("/", response_model=ReservationRead, status_code=status.HTTP_201_CREATED)
 def create_reservation(
     payload: ReservationCreate,

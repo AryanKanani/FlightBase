@@ -40,6 +40,38 @@ def list_tickets(db: Session = Depends(get_db)) -> list[TicketRead]:
     ]
 
 
+@router.get("/{ticket_id}", response_model=TicketRead)
+def get_ticket(ticket_id: int, db: Session = Depends(get_db)) -> TicketRead:
+    ticket = (
+        db.query(Ticket)
+        .options(
+            joinedload(Ticket.schedule).joinedload(Schedule.flight),
+            joinedload(Ticket.seat),
+            joinedload(Ticket.fare),
+        )
+        .filter(Ticket.ticket_id == ticket_id)
+        .first()
+    )
+
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found.",
+        )
+
+    return TicketRead(
+        ticket_id=ticket.ticket_id,
+        booking_id=ticket.booking_id,
+        schedule_id=ticket.schedule_id,
+        seat_id=ticket.seat_id,
+        fare_id=ticket.fare_id,
+        flight_number=ticket.schedule.flight.flight_number,
+        seat_number=ticket.seat.seat_number,
+        price=ticket.price,
+        issue_date=ticket.issue_date,
+    )
+
+
 @router.post("/", response_model=TicketRead, status_code=status.HTTP_201_CREATED)
 def create_ticket(payload: TicketCreate, db: Session = Depends(get_db)) -> TicketRead:
     booking = db.query(Booking).filter(Booking.booking_id == payload.booking_id).first()
