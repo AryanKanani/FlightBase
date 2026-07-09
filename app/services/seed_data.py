@@ -57,6 +57,8 @@ def _create_airlines(db: Session) -> list[Airline]:
         ("SkyJet Airways", "SJ"),
         ("Nimbus Air", "NB"),
         ("AeroVista", "AV"),
+        ("BlueHarbor Airlines", "BH"),
+        ("Orbit Air", "OA"),
     ]
     airlines = [Airline(name=name, iata_code=code) for name, code in airline_data]
     db.add_all(airlines)
@@ -71,6 +73,11 @@ def _create_airports(db: Session) -> list[Airport]:
         ("Kempegowda International Airport", "Bengaluru", "India", "BLR"),
         ("Rajiv Gandhi International Airport", "Hyderabad", "India", "HYD"),
         ("Chennai International Airport", "Chennai", "India", "MAA"),
+        ("Netaji Subhas Chandra Bose International Airport", "Kolkata", "India", "CCU"),
+        ("Sardar Vallabhbhai Patel International Airport", "Ahmedabad", "India", "AMD"),
+        ("Goa International Airport", "Goa", "India", "GOI"),
+        ("Pune Airport", "Pune", "India", "PNQ"),
+        ("Jaipur International Airport", "Jaipur", "India", "JAI"),
     ]
     airports = [
         Airport(name=name, city=city, country=country, iata_code=code)
@@ -93,26 +100,24 @@ def _create_seat_classes(db: Session) -> list[SeatClass]:
 
 
 def _create_aircraft(db: Session, airlines: list[Airline]) -> list[Aircraft]:
-    aircraft = [
-        Aircraft(
-            airline_id=airlines[0].airline_id,
-            model="A320",
-            manufacturer="Airbus",
-            total_seats=180,
-        ),
-        Aircraft(
-            airline_id=airlines[1].airline_id,
-            model="B737",
-            manufacturer="Boeing",
-            total_seats=160,
-        ),
-        Aircraft(
-            airline_id=airlines[2].airline_id,
-            model="A321",
-            manufacturer="Airbus",
-            total_seats=200,
-        ),
+    aircraft = []
+    aircraft_specs = [
+        ("A320", "Airbus", 180),
+        ("B737", "Boeing", 160),
+        ("A321", "Airbus", 200),
+        ("A319", "Airbus", 150),
+        ("E175", "Embraer", 76),
     ]
+    for index, airline in enumerate(airlines):
+        spec = aircraft_specs[index % len(aircraft_specs)]
+        aircraft.append(
+            Aircraft(
+                airline_id=airline.airline_id,
+                model=spec[0],
+                manufacturer=spec[1],
+                total_seats=spec[2],
+            )
+        )
     db.add_all(aircraft)
     db.flush()
     return aircraft
@@ -125,6 +130,13 @@ def _create_flights(db: Session, airlines: list[Airline], airports: list[Airport
         (airlines[1], "NB303", airports[2], airports[3]),
         (airlines[1], "NB404", airports[3], airports[4]),
         (airlines[2], "AV505", airports[4], airports[0]),
+        (airlines[2], "AV606", airports[5], airports[6]),
+        (airlines[3], "BH707", airports[6], airports[7]),
+        (airlines[3], "BH808", airports[7], airports[8]),
+        (airlines[4], "OA909", airports[8], airports[9]),
+        (airlines[4], "OA010", airports[9], airports[0]),
+        (airlines[0], "SJ111", airports[2], airports[5]),
+        (airlines[1], "NB212", airports[4], airports[7]),
     ]
     flights = [
         Flight(
@@ -259,7 +271,7 @@ def _create_passengers(db: Session) -> list[Passenger]:
             phone=fake.phone_number(),
             passport_no=fake.unique.bothify(text="??######"),
         )
-        for _ in range(10)
+        for _ in range(40)
     ]
     db.add_all(passengers)
     db.flush()
@@ -319,7 +331,7 @@ def _create_bookings_tickets_and_payments(
 
 
 def _ensure_demo_routes_and_schedules(db: Session) -> None:
-    target_schedule_count = 60
+    target_schedule_count = 140
     if db.query(Schedule).count() >= target_schedule_count:
         return
 
